@@ -223,9 +223,8 @@ export class GitStore extends BaseStore {
       return null
     }
 
-    const requestKey = `history/compare/${commitish}/skip/${skip}/author/${
-      authorFilter || 'none'
-    }`
+    const authorKey = authorFilter ?? 'all'
+    const requestKey = `history/compare/${commitish}/skip/${skip}/author/${authorKey}`
     if (this.requestsInFight.has(requestKey)) {
       return null
     }

@@ -1533,10 +1533,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
   /**
    * Extract author filter from filterText if it starts with @
    * Returns the username without the @ symbol, or null if not an author filter
+   * or if the username is empty/whitespace
    */
   private extractAuthorFilter(filterText: string): string | null {
     if (filterText.startsWith('@')) {
-      return filterText.substring(1)
+      const username = filterText.substring(1).trim()
+      return username.length > 0 ? username : null
     }
     return null
   }

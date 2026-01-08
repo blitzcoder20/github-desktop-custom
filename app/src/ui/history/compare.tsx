@@ -555,12 +555,11 @@ export class CompareSidebar extends React.Component<
     // 1. Filter starts with @ (author filter)
     // 2. Filter was previously an author filter and is now cleared/changed
     if (this.props.compareState.formState.kind === HistoryTabMode.History) {
-      const wasAuthorFilter =
-        this.props.compareState.filterText.startsWith('@')
-      const isAuthorFilter = filterText.startsWith('@')
+      const wasAuthorFilter = isAuthorFilter(this.props.compareState.filterText)
+      const nowAuthorFilter = isAuthorFilter(filterText)
 
       // Reload commits if switching to/from author filter or if author filter changed
-      if (isAuthorFilter || wasAuthorFilter) {
+      if (nowAuthorFilter || wasAuthorFilter) {
         this.props.dispatcher.executeCompare(this.props.repository, {
           kind: HistoryTabMode.History,
         })
@@ -738,6 +737,13 @@ export class CompareSidebar extends React.Component<
       },
     })
   }
+}
+
+/**
+ * Check if a filter text represents an author filter (starts with @)
+ */
+function isAuthorFilter(filterText: string): boolean {
+  return filterText.startsWith('@')
 }
 
 function getPlaceholderText(state: ICompareState) {
