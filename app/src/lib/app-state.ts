@@ -859,6 +859,9 @@ export interface ICompareState {
   /** The text entered into the compare branch filter text box */
   readonly filterText: string
 
+  /** The author filter for commit history (extracted from filterText when using @{username} syntax) */
+  readonly authorFilter: string | null
+
   /** The SHA associated with the most recent history state */
   readonly tip: string | null
 
