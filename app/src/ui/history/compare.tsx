@@ -550,6 +550,21 @@ export class CompareSidebar extends React.Component<
     this.props.dispatcher.updateCompareForm(this.props.repository, {
       filterText,
     })
+
+    // If in History mode, trigger commit reload when:
+    // 1. Filter starts with @ (author filter)
+    // 2. Filter was previously an author filter and is now cleared/changed
+    if (this.props.compareState.formState.kind === HistoryTabMode.History) {
+      const wasAuthorFilter = isAuthorFilter(this.props.compareState.filterText)
+      const nowAuthorFilter = isAuthorFilter(filterText)
+
+      // Reload commits if switching to/from author filter or if author filter changed
+      if (nowAuthorFilter || wasAuthorFilter) {
+        this.props.dispatcher.executeCompare(this.props.repository, {
+          kind: HistoryTabMode.History,
+        })
+      }
+    }
   }
 
   private clearFilterState = () => {
@@ -724,6 +739,13 @@ export class CompareSidebar extends React.Component<
   }
 }
 
+/**
+ * Check if a filter text represents an author filter (starts with @)
+ */
+function isAuthorFilter(filterText: string): boolean {
+  return filterText.startsWith('@')
+}
+
 function getPlaceholderText(state: ICompareState) {
   const { branches, formState } = state
 
@@ -731,8 +753,8 @@ function getPlaceholderText(state: ICompareState) {
     return __DARWIN__ ? 'No Branches to Compare' : 'No branches to compare'
   } else if (formState.kind === HistoryTabMode.History) {
     return __DARWIN__
-      ? 'Select Branch to Compare…'
-      : 'Select branch to compare…'
+      ? 'Select Branch to Compare or @username to Filter…'
+      : 'Select branch to compare or @username to filter…'
   } else {
     return undefined
   }

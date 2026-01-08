@@ -1530,6 +1530,19 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this._executeCompare(repository, action)
   }
 
+  /**
+   * Extract author filter from filterText if it starts with @
+   * Returns the username without the @ symbol, or null if not an author filter
+   * or if the username is empty/whitespace
+   */
+  private extractAuthorFilter(filterText: string): string | null {
+    if (filterText.startsWith('@')) {
+      const username = filterText.substring(1).trim()
+      return username.length > 0 ? username : null
+    }
+    return null
+  }
+
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _executeCompare(
     repository: Repository,
@@ -1563,13 +1576,25 @@ export class AppStore extends TypedBaseStore<IAppState> {
         formState.kind === HistoryTabMode.History &&
         commitSHAs.length > 0
       ) {
-        // don't refresh the history view here because we know nothing important
-        // has changed and we don't want to rebuild this state
-        return
+        // Check if author filter has changed
+        const currentAuthorFilter = this.extractAuthorFilter(
+          compareState.filterText
+        )
+        const previousAuthorFilter = compareState.authorFilter
+
+        // If the author filter hasn't changed, don't refresh
+        if (currentAuthorFilter === previousAuthorFilter) {
+          // don't refresh the history view here because we know nothing important
+          // has changed and we don't want to rebuild this state
+          return
+        }
       }
 
+      // Extract author filter from filterText
+      const authorFilter = this.extractAuthorFilter(compareState.filterText)
+
       // load initial group of commits for current branch
-      const commits = await gitStore.loadCommitBatch('HEAD', 0)
+      const commits = await gitStore.loadCommitBatch('HEAD', 0, authorFilter)
 
       if (commits === null) {
         return
@@ -1583,7 +1608,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
         tip: currentSha,
         formState: newState,
         commitSHAs: commits,
-        filterText: '',
+        filterText: compareState.filterText,
+        authorFilter,
         showBranchList: false,
       }))
       this.updateOrSelectFirstCommit(repository, commits)
@@ -1724,6 +1750,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const { formState } = state.compareState
     if (formState.kind === HistoryTabMode.History) {
       const commits = state.compareState.commitSHAs
+      const authorFilter = state.compareState.authorFilter
 
       const tip = state.branchesState.tip
 
@@ -1739,7 +1766,11 @@ export class AppStore extends TypedBaseStore<IAppState> {
       }
 
       if (!newCommits || newCommits.length === 0) {
-        newCommits = await gitStore.loadCommitBatch('HEAD', commits.length)
+        newCommits = await gitStore.loadCommitBatch(
+          'HEAD',
+          commits.length,
+          authorFilter
+        )
       }
 
       if (!newCommits) {

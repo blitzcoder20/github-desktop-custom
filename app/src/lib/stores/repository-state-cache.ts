@@ -347,6 +347,7 @@ function getInitialRepositoryState(): IRepositoryState {
       mergeStatus: null,
       showBranchList: false,
       filterText: '',
+      authorFilter: null,
       commitSHAs: [],
       shasToHighlight: [],
       branches: new Array<Branch>(),
